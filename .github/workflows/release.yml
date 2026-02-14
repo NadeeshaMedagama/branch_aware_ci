@@ -1,0 +1,177 @@
+name: "Release"
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  REGISTRY: docker.io
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+
+jobs:
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+          git log $(git describe --tags --abbrev=0 HEAD^)..HEAD --pretty=format:"- %s (%h)" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Build binaries
+        run: |
+          mkdir -p dist
+          
+          # Build for multiple platforms
+          GOOS=linux GOARCH=amd64 go build -o dist/branch-aware-ci-linux-amd64 ./main.go
+          GOOS=linux GOARCH=arm64 go build -o dist/branch-aware-ci-linux-arm64 ./main.go
+          GOOS=darwin GOARCH=amd64 go build -o dist/branch-aware-ci-darwin-amd64 ./main.go
+          GOOS=darwin GOARCH=arm64 go build -o dist/branch-aware-ci-darwin-arm64 ./main.go
+          GOOS=windows GOARCH=amd64 go build -o dist/branch-aware-ci-windows-amd64.exe ./main.go
+          
+          # Create checksums
+          cd dist
+          sha256sum * > checksums.txt
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release ${{ steps.get_version.outputs.VERSION }}
+          body: |
+            ## Changes in ${{ steps.get_version.outputs.VERSION }}
+
+            ${{ steps.changelog.outputs.CHANGELOG }}
+
+            ## Docker Images
+
+            ```bash
+            # Gateway
+            docker pull ${{ env.DOCKER_USERNAME }}/branch-aware-gateway:${{ steps.get_version.outputs.VERSION }}
+
+            # Branch Detector
+            docker pull ${{ env.DOCKER_USERNAME }}/branch-aware-branch-detector:${{ steps.get_version.outputs.VERSION }}
+
+            # Policy Engine
+            docker pull ${{ env.DOCKER_USERNAME }}/branch-aware-policy-engine:${{ steps.get_version.outputs.VERSION }}
+            ```
+
+            ## Installation
+
+            ### CLI Tool
+            ```bash
+            # Linux (amd64)
+            wget https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.VERSION }}/branch-aware-ci-linux-amd64
+            chmod +x branch-aware-ci-linux-amd64
+            sudo mv branch-aware-ci-linux-amd64 /usr/local/bin/branch-aware-ci
+
+            # macOS (Apple Silicon)
+            wget https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.VERSION }}/branch-aware-ci-darwin-arm64
+            chmod +x branch-aware-ci-darwin-arm64
+            sudo mv branch-aware-ci-darwin-arm64 /usr/local/bin/branch-aware-ci
+            ```
+
+            ### Docker Compose
+            ```bash
+            docker-compose up -d
+            ```
+
+            ### GitHub Action
+            ```yaml
+            - uses: nadeesha_medagama/branch-aware-ci@${{ steps.get_version.outputs.VERSION }}
+            ```
+          files: |
+            dist/*
+          draft: false
+          prerelease: ${{ contains(steps.get_version.outputs.VERSION, 'rc') || contains(steps.get_version.outputs.VERSION, 'beta') || contains(steps.get_version.outputs.VERSION, 'alpha') }}
+
+  publish-docker:
+    name: Publish Docker Images
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [gateway, branch-detector, policy-engine]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./services/${{ matrix.service }}/Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ${{ env.DOCKER_USERNAME }}/branch-aware-${{ matrix.service }}:latest
+            ${{ env.DOCKER_USERNAME }}/branch-aware-${{ matrix.service }}:${{ steps.get_version.outputs.VERSION }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  update-docs:
+    name: Update Documentation
+    runs-on: ubuntu-latest
+    needs: [create-release, publish-docker]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Update CHANGELOG
+        run: |
+          echo "## ${{ steps.get_version.outputs.VERSION }} - $(date +%Y-%m-%d)" >> CHANGELOG.tmp
+          echo "" >> CHANGELOG.tmp
+          git log $(git describe --tags --abbrev=0 HEAD^)..HEAD --pretty=format:"- %s" >> CHANGELOG.tmp
+          echo "" >> CHANGELOG.tmp
+          echo "" >> CHANGELOG.tmp
+          cat CHANGELOG.md >> CHANGELOG.tmp
+          mv CHANGELOG.tmp CHANGELOG.md
+
+      - name: Commit updated CHANGELOG
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add CHANGELOG.md
+          git commit -m "docs: update CHANGELOG for ${{ steps.get_version.outputs.VERSION }}" || echo "No changes to commit"
+          git push origin HEAD:main || echo "No changes to push"
+
