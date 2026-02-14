@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/nadeesha_medagama/branch-aware-ci/pkg/interfaces"
+	"github.com/NadeeshaMedagama/branch_aware_ci/pkg/interfaces"
 )
 
 // HTTPHandler handles HTTP requests for the branch detector service
