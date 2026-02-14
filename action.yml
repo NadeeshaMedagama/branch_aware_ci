@@ -1,0 +1,46 @@
+name: 'Branch-Aware CI'
+description: 'Automatically detect Git branch and make intelligent CI/CD decisions'
+author: 'Nadeesha Medagama'
+branding:
+  icon: 'git-branch'
+  color: 'green'
+
+inputs:
+  config-path:
+    description: 'Path to configuration file'
+    required: false
+    default: ''
+  output-format:
+    description: 'Output format (json, yaml, env, github-env, github-output, human)'
+    required: false
+    default: 'github-output'
+  repo-path:
+    description: 'Path to Git repository'
+    required: false
+    default: '.'
+
+outputs:
+  branch_name:
+    description: 'The detected branch name'
+  branch_type:
+    description: 'The branch type (feature, hotfix, release, main, etc.)'
+  environment:
+    description: 'The target environment for deployment'
+  should_deploy:
+    description: 'Whether deployment should proceed'
+  requires_approval:
+    description: 'Whether manual approval is required'
+  actions:
+    description: 'Comma-separated list of recommended actions'
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - '-config'
+    - ${{ inputs.config-path }}
+    - '-format'
+    - ${{ inputs.output-format }}
+    - '-repo'
+    - ${{ inputs.repo-path }}
+
