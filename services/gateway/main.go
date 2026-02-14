@@ -12,7 +12,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/nadeesha_medagama/branch-aware-ci/pkg/interfaces"
+	"github.com/NadeeshaMedagama/branch_aware_ci/pkg/interfaces"
 )
 
 const (
