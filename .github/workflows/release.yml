@@ -100,7 +100,7 @@ jobs:
 
             ### GitHub Action
             ```yaml
-            - uses: nadeesha_medagama/branch-aware-ci@${{ steps.get_version.outputs.VERSION }}
+            - uses: NadeeshaMedagama/branch_aware_ci@${{ steps.get_version.outputs.VERSION }}
             ```
           files: |
             dist/*
