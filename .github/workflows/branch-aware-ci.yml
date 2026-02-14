@@ -29,7 +29,7 @@ jobs:
 
       - name: Detect branch and environment
         id: branch-detect
-        uses: NadeeshaMedagama/branch_aware_ci@v1
+        uses: ./  # Uses local action for self-testing
         with:
           config-path: '.branchci.yml'
           output-format: 'github-output'
