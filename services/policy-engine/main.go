@@ -10,9 +10,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/nadeesha_medagama/branch-aware-ci/pkg/interfaces"
-	"github.com/nadeesha_medagama/branch-aware-ci/services/policy-engine/engine"
-	"github.com/nadeesha_medagama/branch-aware-ci/services/policy-engine/handler"
+	"github.com/NadeeshaMedagama/branch_aware_ci/pkg/interfaces"
+	"github.com/NadeeshaMedagama/branch_aware_ci/services/policy-engine/engine"
+	"github.com/NadeeshaMedagama/branch_aware_ci/services/policy-engine/handler"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
