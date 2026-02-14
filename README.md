@@ -54,7 +54,7 @@ jobs:
       
       - name: Detect branch and environment
         id: branch
-        uses: nadeesha_medagama/branch-aware-ci@v1
+        uses: NadeeshaMedagama/branch_aware_ci@v1
       
       - name: Deploy
         if: steps.branch.outputs.should_deploy == 'true'
@@ -110,7 +110,7 @@ The action automatically:
 Add to your workflow file (`.github/workflows/*.yml`):
 
 ```yaml
-- uses: nadeesha_medagama/branch-aware-ci@v1
+- uses: NadeeshaMedagama/branch_aware_ci@v1
   with:
     config-path: '.branchci.yml'  # optional
     output-format: 'github-output' # optional
@@ -120,12 +120,12 @@ Add to your workflow file (`.github/workflows/*.yml`):
 
 #### Using Go:
 ```bash
-go install github.com/nadeesha_medagama/branch-aware-ci@latest
+go install github.com/NadeeshaMedagama/branch_aware_ci@latest
 ```
 
 #### From source:
 ```bash
-git clone https://github.com/nadeesha_medagama/branch-aware-ci.git
+git clone https://github.com/NadeeshaMedagama/branch_aware_ci.git
 cd branch-aware-ci
 go build -o branch-aware-ci
 ```
@@ -154,7 +154,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Detect branch
         id: detect
-        uses: nadeesha_medagama/branch-aware-ci@v1
+        uses: NadeeshaMedagama/branch_aware_ci@v1
       
       - name: Show results
         run: |
@@ -263,7 +263,7 @@ jobs:
       - uses: actions/checkout@v4
       
       - id: branch
-        uses: nadeesha_medagama/branch-aware-ci@v1
+        uses: NadeeshaMedagama/branch_aware_ci@v1
       
       - name: Deploy
         if: steps.branch.outputs.should_deploy == 'true'
@@ -282,7 +282,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - id: detect
-        uses: nadeesha_medagama/branch-aware-ci@v1
+        uses: NadeeshaMedagama/branch_aware_ci@v1
 
   deploy-prod:
     needs: detect
@@ -303,7 +303,7 @@ jobs:
 
 ```yaml
 steps:
-  - uses: nadeesha_medagama/branch-aware-ci@v1
+  - uses: NadeeshaMedagama/branch_aware_ci@v1
     with:
       output-format: github-env
   
@@ -435,7 +435,7 @@ Contributions are welcome! Please see [CONTRIBUTING.md](docs/monolithic-docs/CON
 
 ```bash
 # Clone the repository
-git clone https://github.com/nadeesha_medagama/branch-aware-ci.git
+git clone https://github.com/NadeeshaMedagama/branch_aware_ci.git
 cd branch-aware-ci
 
 # Install dependencies
@@ -468,7 +468,7 @@ If this project helped you, please give it a ⭐️!
 ## 📞 Contact
 
 - **Author**: Nadeesha Medagama
-- **GitHub**: [@nadeesha_medagama](https://github.com/nadeesha_medagama)
+- **GitHub**: [@NadeeshaMedagama](https://github.com/NadeeshaMedagama)
 
 ---
 
