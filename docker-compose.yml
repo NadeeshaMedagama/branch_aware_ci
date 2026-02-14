@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  # API Gateway
+  gateway:
+    build:
+      context: .
+      dockerfile: services/gateway/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - BRANCH_DETECTOR_URL=http://branch-detector:8081
+      - POLICY_ENGINE_URL=http://policy-engine:8082
+      - CONFIG_SERVICE_URL=http://config-service:8083
+    depends_on:
+      - branch-detector
+      - policy-engine
+    networks:
+      - branch-aware-network
+    restart: unless-stopped
+
+  # Branch Detector Service
+  branch-detector:
+    build:
+      context: .
+      dockerfile: services/branch-detector/Dockerfile
+    ports:
+      - "8081:8081"
+      - "50051:50051"
+    environment:
+      - GRPC_PORT=50051
+      - HTTP_PORT=8081
+    volumes:
+      - ./:/repo:ro
+    networks:
+      - branch-aware-network
+    restart: unless-stopped
+
+  # Policy Engine Service
+  policy-engine:
+    build:
+      context: .
+      dockerfile: services/policy-engine/Dockerfile
+    ports:
+      - "8082:8082"
+      - "50052:50052"
+    environment:
+      - GRPC_PORT=50052
+      - HTTP_PORT=8082
+    networks:
+      - branch-aware-network
+    restart: unless-stopped
+
+  # Prometheus for monitoring (optional)
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - branch-aware-network
+    restart: unless-stopped
+
+networks:
+  branch-aware-network:
+    driver: bridge
+
+volumes:
+  prometheus_data:
+
