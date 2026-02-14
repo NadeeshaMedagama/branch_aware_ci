@@ -1,8 +1,6 @@
 package main
 
 import (
-	"context"
-	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -11,9 +9,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/nadeesha_medagama/branch-aware-ci/pkg/interfaces"
-	"github.com/nadeesha_medagama/branch-aware-ci/services/branch-detector/detector"
-	"github.com/nadeesha_medagama/branch-aware-ci/services/branch-detector/handler"
+	"github.com/NadeeshaMedagama/branch_aware_ci/pkg/interfaces"
+	"github.com/NadeeshaMedagama/branch_aware_ci/services/branch-detector/detector"
+	"github.com/NadeeshaMedagama/branch_aware_ci/services/branch-detector/handler"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
