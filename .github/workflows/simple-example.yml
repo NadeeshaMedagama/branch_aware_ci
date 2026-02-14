@@ -1,0 +1,54 @@
+name: Simple Branch-Based Deployment
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+      - develop
+      - 'feature/**'
+
+jobs:
+  auto-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect branch and set environment
+        id: branch
+        uses: nadeesha_medagama/branch-aware-ci@v1
+
+      - name: Set environment variables
+        run: |
+          echo "DEPLOY_ENV=${{ steps.branch.outputs.environment }}" >> $GITHUB_ENV
+          echo "BRANCH_TYPE=${{ steps.branch.outputs.branch_type }}" >> $GITHUB_ENV
+
+      - name: Deploy based on environment
+        if: steps.branch.outputs.should_deploy == 'true'
+        run: |
+          echo "Deploying to $DEPLOY_ENV environment"
+          
+          case "$DEPLOY_ENV" in
+            production)
+              echo "🚀 Production deployment"
+              # Deploy to production
+              ;;
+            staging)
+              echo "📦 Staging deployment"
+              # Deploy to staging
+              ;;
+            development)
+              echo "🔧 Development deployment"
+              # Deploy to development
+              ;;
+          esac
+
+      - name: Skip deployment
+        if: steps.branch.outputs.should_deploy != 'true'
+        run: |
+          echo "⏭️  Skipping deployment for branch type: $BRANCH_TYPE"
+
