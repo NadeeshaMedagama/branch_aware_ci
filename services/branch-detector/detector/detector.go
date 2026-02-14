@@ -7,8 +7,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/NadeeshaMedagama/branch_aware_ci/pkg/interfaces"
 	"github.com/go-git/go-git/v5"
-	"github.com/nadeesha_medagama/branch-aware-ci/pkg/interfaces"
 )
 
 // BranchDetector implements the IBranchDetector interface
