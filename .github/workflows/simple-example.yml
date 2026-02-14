@@ -20,7 +20,7 @@ jobs:
 
       - name: Detect branch and set environment
         id: branch
-        uses: nadeesha_medagama/branch-aware-ci@v1
+        uses: NadeeshaMedagama/branch_aware_ci@v1
 
       - name: Set environment variables
         run: |
