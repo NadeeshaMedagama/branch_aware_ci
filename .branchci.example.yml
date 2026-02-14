@@ -1,0 +1,114 @@
+# Example configuration for branch-aware-ci
+# Place this file at .branchci.yml in your repository root
+
+# Environment definitions
+environments:
+  production:
+    name: production
+    requires_approval: true
+    allowed_branches:
+      - main
+      - master
+    variables:
+      ENV: production
+      LOG_LEVEL: info
+    notify_on_deploy: true
+
+  staging:
+    name: staging
+    requires_approval: false
+    allowed_branches:
+      - staging
+      - develop
+      - release/*
+    variables:
+      ENV: staging
+      LOG_LEVEL: debug
+    notify_on_deploy: true
+
+  development:
+    name: development
+    requires_approval: false
+    allowed_branches:
+      - feature/*
+      - bugfix/*
+      - hotfix/*
+    variables:
+      ENV: development
+      LOG_LEVEL: debug
+    notify_on_deploy: false
+
+# Branch to environment mappings
+branch_mappings:
+  # Production branches (highest priority)
+  - pattern: main
+    environment: production
+    actions:
+      - test
+      - deploy
+      - notify
+    priority: 100
+
+  - pattern: master
+    environment: production
+    actions:
+      - test
+      - deploy
+      - notify
+    priority: 100
+
+  # Staging branches
+  - pattern: staging
+    environment: staging
+    actions:
+      - test
+      - deploy
+      - notify
+    priority: 90
+
+  - pattern: develop
+    environment: staging
+    actions:
+      - test
+      - deploy
+    priority: 80
+
+  # Release branches
+  - pattern: release/*
+    environment: staging
+    actions:
+      - test
+      - deploy
+    priority: 85
+
+  # Hotfix branches (urgent fixes)
+  - pattern: hotfix/*
+    environment: staging
+    actions:
+      - test
+      - deploy
+    priority: 70
+
+  # Feature branches (development)
+  - pattern: feature/*
+    environment: development
+    actions:
+      - test
+    priority: 50
+
+  - pattern: bugfix/*
+    environment: development
+    actions:
+      - test
+    priority: 50
+
+# Global policies
+policies:
+  require_tests: true
+  require_code_review: true
+  blocked_branch_patterns: []
+  auto_deploy_branches:
+    - main
+    - master
+    - staging
+
