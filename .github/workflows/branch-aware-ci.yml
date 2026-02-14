@@ -1,0 +1,127 @@
+name: Branch-Aware CI/CD
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  detect-branch:
+    name: Detect Branch and Environment
+    runs-on: ubuntu-latest
+    outputs:
+      branch_name: ${{ steps.branch-detect.outputs.branch_name }}
+      branch_type: ${{ steps.branch-detect.outputs.branch_type }}
+      environment: ${{ steps.branch-detect.outputs.environment }}
+      should_deploy: ${{ steps.branch-detect.outputs.should_deploy }}
+      requires_approval: ${{ steps.branch-detect.outputs.requires_approval }}
+      actions: ${{ steps.branch-detect.outputs.actions }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect branch and environment
+        id: branch-detect
+        uses: nadeesha_medagama/branch-aware-ci@v1
+        with:
+          config-path: '.branchci.yml'
+          output-format: 'github-output'
+
+      - name: Display decision
+        run: |
+          echo "Branch: ${{ steps.branch-detect.outputs.branch_name }}"
+          echo "Type: ${{ steps.branch-detect.outputs.branch_type }}"
+          echo "Environment: ${{ steps.branch-detect.outputs.environment }}"
+          echo "Should Deploy: ${{ steps.branch-detect.outputs.should_deploy }}"
+          echo "Requires Approval: ${{ steps.branch-detect.outputs.requires_approval }}"
+          echo "Actions: ${{ steps.branch-detect.outputs.actions }}"
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    needs: detect-branch
+    if: contains(needs.detect-branch.outputs.actions, 'test')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up environment
+        run: |
+          echo "Running tests for ${{ needs.detect-branch.outputs.environment }} environment"
+
+      - name: Run tests
+        run: |
+          # Add your test commands here
+          echo "Running tests..."
+          # npm test
+          # go test ./...
+          # pytest
+
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    needs: [detect-branch, test]
+    if: success()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build
+        run: |
+          echo "Building for ${{ needs.detect-branch.outputs.environment }} environment"
+          # Add your build commands here
+          # npm run build
+          # go build
+          # docker build
+
+  deploy:
+    name: Deploy to ${{ needs.detect-branch.outputs.environment }}
+    runs-on: ubuntu-latest
+    needs: [detect-branch, build]
+    if: needs.detect-branch.outputs.should_deploy == 'true'
+    environment:
+      name: ${{ needs.detect-branch.outputs.environment }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy
+        run: |
+          echo "Deploying to ${{ needs.detect-branch.outputs.environment }}"
+          echo "Branch: ${{ needs.detect-branch.outputs.branch_name }}"
+          echo "Type: ${{ needs.detect-branch.outputs.branch_type }}"
+          # Add your deployment commands here
+          # kubectl apply -f k8s/
+          # aws deploy ...
+          # terraform apply
+
+  notify:
+    name: Send Notifications
+    runs-on: ubuntu-latest
+    needs: [detect-branch, deploy]
+    if: |
+      always() && 
+      contains(needs.detect-branch.outputs.actions, 'notify') &&
+      needs.detect-branch.outputs.should_deploy == 'true'
+
+    steps:
+      - name: Notify deployment status
+        run: |
+          if [ "${{ needs.deploy.result }}" == "success" ]; then
+            echo "✅ Deployment to ${{ needs.detect-branch.outputs.environment }} succeeded!"
+            # Send success notification (Slack, Discord, email, etc.)
+          else
+            echo "❌ Deployment to ${{ needs.detect-branch.outputs.environment }} failed!"
+            # Send failure notification
+          fi
+
