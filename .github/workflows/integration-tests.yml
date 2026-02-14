@@ -1,0 +1,85 @@
+name: "Integration Tests"
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  integration-tests:
+    name: Run Integration Tests
+    runs-on: ubuntu-latest
+
+    services:
+      # Could add external services here if needed
+      # e.g., postgres, redis, etc.
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache: true
+
+      - name: Install dependencies
+        run: |
+          go mod download
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+
+      - name: Run unit tests
+        run: go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.out
+          flags: unittests
+          name: codecov-umbrella
+
+      - name: Build all services
+        run: |
+          go build -v ./services/gateway
+          go build -v ./services/branch-detector
+          go build -v ./services/policy-engine
+
+      - name: Start services with Docker Compose
+        run: |
+          docker-compose up -d
+          sleep 30
+
+      - name: Run health checks
+        run: |
+          # Check gateway
+          curl -f http://localhost:8080/health || (docker-compose logs && exit 1)
+          
+          # Check branch detector
+          curl -f http://localhost:8081/health || (docker-compose logs && exit 1)
+          
+          # Check policy engine
+          curl -f http://localhost:8082/health || (docker-compose logs && exit 1)
+
+      - name: Run integration tests
+        run: |
+          # Test full workflow
+          curl -X POST http://localhost:8080/api/v1/analyze \
+            -H "Content-Type: application/json" \
+            -d '{"repo_path": "."}' \
+            || (docker-compose logs && exit 1)
+
+      - name: Stop services
+        if: always()
+        run: docker-compose down
+
+      - name: Archive service logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: service-logs
+          path: |
+            docker-compose-logs.txt
+
