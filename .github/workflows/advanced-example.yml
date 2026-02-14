@@ -1,12 +1,9 @@
-name: Advanced Multi-Environment Pipeline
+name: Advanced Multi-Environment Pipeline (Example)
 
+# This is an EXAMPLE workflow - it only runs manually
+# Copy this to your own repository to use it
 on:
-  push:
-    branches:
-      - '**'
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch:  # Manual trigger only
 
 env:
   REGISTRY: ghcr.io
