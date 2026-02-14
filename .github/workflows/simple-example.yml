@@ -1,12 +1,9 @@
-name: Simple Branch-Based Deployment
+name: Simple Branch-Based Deployment (Example)
 
+# This is an EXAMPLE workflow - it only runs manually
+# Copy this to your own repository to use it
 on:
-  push:
-    branches:
-      - main
-      - staging
-      - develop
-      - 'feature/**'
+  workflow_dispatch:  # Manual trigger only
 
 jobs:
   auto-deploy:
