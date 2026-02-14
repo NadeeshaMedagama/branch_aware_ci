@@ -1,0 +1,133 @@
+syntax = "proto3";
+
+package branchaware.v1;
+
+option go_package = "github.com/nadeesha_medagama/branch-aware-ci/proto/gen/go/branchaware/v1";
+
+// BranchDetectorService handles Git branch detection and analysis
+service BranchDetectorService {
+  rpc DetectBranch(DetectBranchRequest) returns (DetectBranchResponse);
+  rpc GetBranchInfo(GetBranchInfoRequest) returns (BranchInfo);
+}
+
+// PolicyEngineService evaluates policies and makes decisions
+service PolicyEngineService {
+  rpc EvaluatePolicy(EvaluatePolicyRequest) returns (EvaluatePolicyResponse);
+  rpc ValidatePolicy(ValidatePolicyRequest) returns (ValidatePolicyResponse);
+}
+
+// ConfigService manages configuration
+service ConfigService {
+  rpc GetConfig(GetConfigRequest) returns (GetConfigResponse);
+  rpc UpdateConfig(UpdateConfigRequest) returns (UpdateConfigResponse);
+  rpc ValidateConfig(ValidateConfigRequest) returns (ValidateConfigResponse);
+}
+
+// Messages for Branch Detector
+message DetectBranchRequest {
+  string repo_path = 1;
+}
+
+message DetectBranchResponse {
+  BranchInfo branch_info = 1;
+}
+
+message GetBranchInfoRequest {
+  string repo_path = 1;
+  string branch_name = 2;
+}
+
+message BranchInfo {
+  string name = 1;
+  string short_name = 2;
+  string type = 3;
+  map<string, string> metadata = 4;
+  bool is_protected = 5;
+}
+
+// Messages for Policy Engine
+message EvaluatePolicyRequest {
+  BranchInfo branch_info = 1;
+  Config config = 2;
+}
+
+message EvaluatePolicyResponse {
+  Decision decision = 1;
+}
+
+message ValidatePolicyRequest {
+  Config config = 1;
+}
+
+message ValidatePolicyResponse {
+  bool valid = 1;
+  repeated string errors = 2;
+}
+
+message Decision {
+  string branch_name = 1;
+  string branch_type = 2;
+  string environment = 3;
+  bool should_deploy = 4;
+  bool requires_approval = 5;
+  repeated string actions = 6;
+  map<string, string> variables = 7;
+  repeated string warnings = 8;
+  map<string, string> metadata = 9;
+}
+
+// Messages for Config Service
+message GetConfigRequest {
+  string config_path = 1;
+}
+
+message GetConfigResponse {
+  Config config = 1;
+}
+
+message UpdateConfigRequest {
+  Config config = 1;
+  string config_path = 2;
+}
+
+message UpdateConfigResponse {
+  bool success = 1;
+}
+
+message ValidateConfigRequest {
+  Config config = 1;
+}
+
+message ValidateConfigResponse {
+  bool valid = 1;
+  repeated string errors = 2;
+}
+
+message Config {
+  map<string, Environment> environments = 1;
+  repeated BranchMapping branch_mappings = 2;
+  PolicyConfig policies = 3;
+}
+
+message Environment {
+  string name = 1;
+  bool requires_approval = 2;
+  repeated string allowed_branches = 3;
+  map<string, string> variables = 4;
+  bool notify_on_deploy = 5;
+}
+
+message BranchMapping {
+  string pattern = 1;
+  string environment = 2;
+  repeated string actions = 3;
+  int32 priority = 4;
+}
+
+message PolicyConfig {
+  bool require_tests = 1;
+  bool require_code_review = 2;
+  repeated string blocked_branch_patterns = 3;
+  repeated string auto_deploy_branches = 4;
+}
+
