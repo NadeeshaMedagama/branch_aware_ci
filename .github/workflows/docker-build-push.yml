@@ -82,12 +82,12 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Start services with Docker Compose
-        run: docker-compose up -d
+        run: docker compose up -d
 
       - name: Wait for services to be ready
         run: |
           sleep 30
-          docker-compose ps
+          docker compose ps
 
       - name: Test Gateway health
         run: |
@@ -103,7 +103,7 @@ jobs:
 
       - name: Stop services
         if: always()
-        run: docker-compose down
+        run: docker compose down
 
   vulnerability-scan:
     name: Scan Docker Images
