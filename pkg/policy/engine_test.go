@@ -3,8 +3,8 @@ package policy
 import (
 	"testing"
 
-	"github.com/nadeesha_medagama/branch-aware-ci/pkg/config"
-	"github.com/nadeesha_medagama/branch-aware-ci/pkg/git"
+	"github.com/NadeeshaMedagama/branch_aware_ci/pkg/config"
+	"github.com/NadeeshaMedagama/branch_aware_ci/pkg/git"
 )
 
 func TestEvaluate(t *testing.T) {
