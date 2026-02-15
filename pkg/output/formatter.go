@@ -8,7 +8,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/nadeesha_medagama/branch-aware-ci/pkg/policy"
+	"github.com/NadeeshaMedagama/branch_aware_ci/pkg/policy"
 )
 
 // Format represents the output format
