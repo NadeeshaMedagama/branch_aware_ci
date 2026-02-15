@@ -4,8 +4,10 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/object"
 )
 
 func TestDetectBranch(t *testing.T) {
@@ -28,10 +30,27 @@ func TestDetectBranch(t *testing.T) {
 		t.Fatalf("Failed to write test file: %v", err)
 	}
 
-	// Add and commit
-	worktree, _ := repo.Worktree()
-	worktree.Add("test.txt")
-	worktree.Commit("Initial commit", &git.CommitOptions{})
+	// Add and commit with proper author info
+	worktree, err := repo.Worktree()
+	if err != nil {
+		t.Fatalf("Failed to get worktree: %v", err)
+	}
+
+	_, err = worktree.Add("test.txt")
+	if err != nil {
+		t.Fatalf("Failed to add file: %v", err)
+	}
+
+	_, err = worktree.Commit("Initial commit", &git.CommitOptions{
+		Author: &object.Signature{
+			Name:  "Test User",
+			Email: "test@example.com",
+			When:  time.Now(),
+		},
+	})
+	if err != nil {
+		t.Fatalf("Failed to commit: %v", err)
+	}
 
 	// Test detection
 	detector := NewDetector(tmpDir)
