@@ -103,6 +103,12 @@ func LoadConfig(configPath string) (*Config, error) {
 		return DefaultConfig(), nil
 	}
 
+	// Check if the specified config file exists
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		// If a specific path was requested but doesn't exist, use defaults
+		return DefaultConfig(), nil
+	}
+
 	data, err := os.ReadFile(configPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
