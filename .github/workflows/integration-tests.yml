@@ -52,19 +52,19 @@ jobs:
 
       - name: Start services with Docker Compose
         run: |
-          docker-compose up -d
+          docker compose up -d
           sleep 30
 
       - name: Run health checks
         run: |
           # Check gateway
-          curl -f http://localhost:8080/health || (docker-compose logs && exit 1)
+          curl -f http://localhost:8080/health || (docker compose logs && exit 1)
           
           # Check branch detector
-          curl -f http://localhost:8081/health || (docker-compose logs && exit 1)
+          curl -f http://localhost:8081/health || (docker compose logs && exit 1)
           
           # Check policy engine
-          curl -f http://localhost:8082/health || (docker-compose logs && exit 1)
+          curl -f http://localhost:8082/health || (docker compose logs && exit 1)
 
       - name: Run integration tests
         run: |
@@ -72,11 +72,11 @@ jobs:
           curl -X POST http://localhost:8080/api/v1/analyze \
             -H "Content-Type: application/json" \
             -d '{"repo_path": "."}' \
-            || (docker-compose logs && exit 1)
+            || (docker compose logs && exit 1)
 
       - name: Stop services
         if: always()
-        run: docker-compose down
+        run: docker compose down
 
       - name: Archive service logs
         if: failure()
