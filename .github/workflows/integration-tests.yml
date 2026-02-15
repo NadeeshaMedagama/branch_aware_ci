@@ -11,9 +11,6 @@ jobs:
     name: Run Integration Tests
     runs-on: ubuntu-latest
 
-    services:
-      # Could add external services here if needed
-      # e.g., postgres, redis, etc.
 
     steps:
       - name: Checkout code
