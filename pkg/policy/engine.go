@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/nadeesha_medagama/branch-aware-ci/pkg/config"
-	"github.com/nadeesha_medagama/branch-aware-ci/pkg/git"
+	"github.com/NadeeshaMedagama/branch_aware_ci/pkg/config"
+	"github.com/NadeeshaMedagama/branch_aware_ci/pkg/git"
 )
 
 // Decision represents a CI/CD decision based on branch analysis
