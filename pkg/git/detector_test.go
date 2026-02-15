@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
 )
 
 func TestDetectBranch(t *testing.T) {
