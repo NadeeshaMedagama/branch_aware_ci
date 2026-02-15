@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/nadeesha_medagama/branch-aware-ci/pkg/interfaces"
+	"github.com/NadeeshaMedagama/branch_aware_ci/pkg/interfaces"
 )
 
 // PolicyEngine implements the IPolicyEngine interface
