@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # API Gateway
   gateway:
@@ -52,25 +50,8 @@ services:
       - branch-aware-network
     restart: unless-stopped
 
-  # Prometheus for monitoring (optional)
-  prometheus:
-    image: prom/prometheus:latest
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-    networks:
-      - branch-aware-network
-    restart: unless-stopped
-
 networks:
   branch-aware-network:
     driver: bridge
 
-volumes:
-  prometheus_data:
 
