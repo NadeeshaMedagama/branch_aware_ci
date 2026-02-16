@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Branch Detection
         id: detect
-        uses: NadeeshaMedagama/branch_aware_ci@v1
+        uses: NadeeshaMedagama/branch_aware_ci@main
         with:
           config-path: '.branchci.yml'
 
