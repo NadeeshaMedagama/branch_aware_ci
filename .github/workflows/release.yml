@@ -4,6 +4,13 @@ on:
   push:
     tags:
       - 'v*'
+  # Added manual trigger
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release Version (e.g., v1.0.0)'
+        required: true
+        default: 'v0.0.0-manual'
 
 permissions:
   contents: write
@@ -29,15 +36,22 @@ jobs:
         with:
           go-version: '1.23'
 
-      - name: Get version from tag
+      - name: Get version
         id: get_version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "VERSION=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
 
       - name: Generate changelog
         id: changelog
         run: |
           echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
-          git log $(git describe --tags --abbrev=0 HEAD^)..HEAD --pretty=format:"- %s (%h)" >> $GITHUB_OUTPUT
+          # Note: This may fail on manual runs if tags don't exist in history.
+          # Added fallback to just show commit log if tag describe fails.
+          git log $(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo HEAD^)..HEAD --pretty=format:"- %s (%h)" >> $GITHUB_OUTPUT
           echo "" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
@@ -60,6 +74,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           name: Release ${{ steps.get_version.outputs.VERSION }}
+          tag_name: ${{ steps.get_version.outputs.VERSION }}
           body: |
             ## Changes in ${{ steps.get_version.outputs.VERSION }}
 
@@ -83,12 +98,12 @@ jobs:
             ### CLI Tool
             ```bash
             # Linux (amd64)
-            wget https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.VERSION }}/branch-aware-ci-linux-amd64
+            wget [https://github.com/$](https://github.com/$){{ github.repository }}/releases/download/${{ steps.get_version.outputs.VERSION }}/branch-aware-ci-linux-amd64
             chmod +x branch-aware-ci-linux-amd64
             sudo mv branch-aware-ci-linux-amd64 /usr/local/bin/branch-aware-ci
 
             # macOS (Apple Silicon)
-            wget https://github.com/${{ github.repository }}/releases/download/${{ steps.get_version.outputs.VERSION }}/branch-aware-ci-darwin-arm64
+            wget [https://github.com/$](https://github.com/$){{ github.repository }}/releases/download/${{ steps.get_version.outputs.VERSION }}/branch-aware-ci-darwin-arm64
             chmod +x branch-aware-ci-darwin-arm64
             sudo mv branch-aware-ci-darwin-arm64 /usr/local/bin/branch-aware-ci
             ```
@@ -118,9 +133,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Get version from tag
+      - name: Get version
         id: get_version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            # Strip 'v' prefix if user input it, to match your original logic
+            INPUT_VER="${{ inputs.version }}"
+            echo "VERSION=${INPUT_VER#v}" >> $GITHUB_OUTPUT
+          else
+            # Original logic: strips 'v' from tag (v1.0.0 -> 1.0.0)
+            echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          fi
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -153,17 +176,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Get version from tag
+      - name: Get version
         id: get_version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "VERSION=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
 
       - name: Update CHANGELOG
         run: |
           echo "## ${{ steps.get_version.outputs.VERSION }} - $(date +%Y-%m-%d)" >> CHANGELOG.tmp
           echo "" >> CHANGELOG.tmp
-          git log $(git describe --tags --abbrev=0 HEAD^)..HEAD --pretty=format:"- %s" >> CHANGELOG.tmp
+          # Added fallback to avoid failure if git describe fails on manual run
+          git log $(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo HEAD^)..HEAD --pretty=format:"- %s" >> CHANGELOG.tmp
           echo "" >> CHANGELOG.tmp
           echo "" >> CHANGELOG.tmp
+          # Create file if not exists to avoid error
+          touch CHANGELOG.md
           cat CHANGELOG.md >> CHANGELOG.tmp
           mv CHANGELOG.tmp CHANGELOG.md
 
@@ -174,4 +205,3 @@ jobs:
           git add CHANGELOG.md
           git commit -m "docs: update CHANGELOG for ${{ steps.get_version.outputs.VERSION }}" || echo "No changes to commit"
           git push origin HEAD:main || echo "No changes to push"
-
