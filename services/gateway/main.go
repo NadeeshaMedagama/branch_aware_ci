@@ -151,7 +151,7 @@ func (g *Gateway) detectBranch(ctx context.Context, repoPath string) (*interface
 	}
 
 	if result.Error != "" {
-		return nil, fmt.Errorf(result.Error)
+		return nil, fmt.Errorf("%s", result.Error)
 	}
 
 	return result.BranchInfo, nil
