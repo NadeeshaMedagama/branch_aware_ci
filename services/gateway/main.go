@@ -191,7 +191,7 @@ func (g *Gateway) evaluatePolicy(ctx context.Context, branchInfo *interfaces.Bra
 	}
 
 	if result.Error != "" {
-		return nil, fmt.Errorf(result.Error)
+		return nil, fmt.Errorf("%s", result.Error)
 	}
 
 	return result.Decision, nil
