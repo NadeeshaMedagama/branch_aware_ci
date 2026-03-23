@@ -4,7 +4,7 @@ go 1.24.0
 
 require (
 	github.com/go-git/go-git/v5 v5.16.5
-	google.golang.org/grpc v1.79.1
+	google.golang.org/grpc v1.79.3
 	gopkg.in/yaml.v3 v3.0.1
 )
 
