@@ -27,6 +27,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
 
+      - name: Normalize Docker Hub username
+        id: docker-username
+        run: echo "value=${DOCKER_USERNAME,,}" >> "$GITHUB_OUTPUT"
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
@@ -41,7 +47,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ${{ env.REGISTRY }}/${{ env.DOCKER_USERNAME }}/branch-aware-${{ matrix.service }}
+          images: ${{ env.REGISTRY }}/${{ steps.docker-username.outputs.value }}/branch-aware-${{ matrix.service }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -133,4 +139,3 @@ jobs:
         if: always()
         with:
           sarif_file: 'trivy-results-${{ matrix.service }}.sarif'
-
